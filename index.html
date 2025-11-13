@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FreshEats — Food Delivery (Interactive)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8f9fa;
+        line-height: 1.5;
+        color: #111;
+      }
+      header {
+        background: #ff6347;
+        color: #fff;
+        padding: 18px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        flex-direction: column;
+      }
+      .brand h1 {
+        font-size: 18px;
+        margin: 0;
+      }
+      .brand p {
+        font-size: 12px;
+        opacity: 0.95;
+      }
+      .cart-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      nav {
+        background: #333;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      nav a {
+        color: #fff;
+        padding: 10px 14px;
+        text-decoration: none;
+      }
+      .hero {
+        background: linear-gradient(135deg, #ff6347, #ff9966);
+        color: #fff;
+        text-align: center;
+        padding: 64px 16px;
+      }
+      .hero h2 {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+      }
+      .hero p {
+        opacity: 0.95;
+      }
+      .menu {
+        padding: 28px 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 6px 18px rgba(10, 10, 10, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: transform 0.18s;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .meta {
+        color: #666;
+        font-size: 0.95rem;
+      }
+      .price {
+        font-weight: 700;
+      }
+      .actions {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .btn {
+        background: #ff6347;
+        color: #fff;
+        border: none;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .btn.secondary {
+        background: transparent;
+        border: 1px solid #ddd;
+        color: #333;
+      }
+      footer {
+        text-align: center;
+        padding: 18px;
+        background: #222;
+        color: #fff;
+        margin-top: 28px;
+      }
+
+      /* Modal */
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+      }
+      .modal {
+        background: #fff;
+        border-radius: 12px;
+        max-width: 720px;
+        width: 100%;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(12, 12, 12, 0.2);
+      }
+      .cart-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: 60vh;
+        overflow: auto;
+        padding: 8px 0;
+      }
+      .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        border-radius: 8px;
+        padding: 8px;
+        background: #f7f7f8;
+      }
+      .qty {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .small {
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 24px;
+        background: #111;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        display: none;
+        opacity: 0.95;
+      }
+
+      @media (max-width: 480px) {
+        .hero {
+          padding: 40px 12px;
+        }
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <h1>🍴 FreshEats</h1>
+        <p>Fresh. Fast. To your door.</p>
+      </div>
+      <div>
+        <button id="openCartBtn" class="cart-btn">
+          Cart (<span id="cartCount">0</span>)
+        </button>
+      </div>
+    </header>
+
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Menu</a>
+      <a href="#">Offers</a>
+      <a href="#">Contact</a>
+    </nav>
+
+    <section class="hero">
+      <h2>Order your favourite meal</h2>
+      <p>Responsive layout — works on mobile, tablet and desktop</p>
+    </section>
+
+    <section class="menu" id="menu">
+      <!-- Cards will be injected by JS -->
+    </section>
+
+    <footer>© 2025 FreshEats — Made with ❤</footer>
+
+    <!-- Cart Modal -->
+    <div id="backdrop" class="backdrop" aria-hidden="true">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cartTitle"
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3 id="cartTitle">Your Cart</h3>
+          <div style="display: flex; gap: 8px">
+            <button class="btn secondary" id="closeCartBtn">Close</button>
+            <button class="btn" id="checkoutBtn">Checkout</button>
+          </div>
+        </div>
+
+        <div id="cartList" class="cart-list" style="margin-top: 12px">
+          <!-- Items added here -->
+        </div>
+
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+          "
+        >
+          <div class="small">Total: <strong id="cartTotal">₹0</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast">Added to cart</div>
+
+    <script>
+      // Sample items
+      const items = [
+        { id: 1, name: "Margherita Pizza", price: 299 },
+        { id: 2, name: "Paneer Butter Masala", price: 249 },
+        { id: 3, name: "Veg Biryani", price: 199 },
+        { id: 4, name: "Chicken Biryani", price: 279 },
+        { id: 5, name: "Sushi Platter", price: 499 },
+        { id: 6, name: "Masala Dosa", price: 179 },
+        { id: 7, name: "Chocolate Brownie", price: 129 },
+        { id: 8, name: "Caesar Salad", price: 159 },
+      ];
+
+      let cart = {};
+
+      const menuEl = document.getElementById("menu");
+      const cartCountEl = document.getElementById("cartCount");
+      const backdrop = document.getElementById("backdrop");
+      const cartListEl = document.getElementById("cartList");
+      const cartTotalEl = document.getElementById("cartTotal");
+      const toast = document.getElementById("toast");
+
+      function renderMenu() {
+        menuEl.innerHTML = "";
+        items.forEach((it) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>${it.name}</h3>
+            <div class="meta"><span class="small">₹${it.price}</span></div>
+            <div class="actions">
+              <button class="btn" data-id="${it.id}">Order Now</button>
+              <button class="btn secondary" data-id="${it.id}" aria-label="More info">Details</button>
+            </div>
+          `;
+          card
+            .querySelector(".btn")
+            .addEventListener("click", () => addToCart(it.id));
+          card
+            .querySelector(".btn.secondary")
+            .addEventListener("click", () =>
+              alert(it.name + "\\n\\nPrice: ₹" + it.price)
+            );
+          menuEl.appendChild(card);
+        });
+      }
+
+      function addToCart(id) {
+        const item = items.find((x) => x.id === id);
+        if (!item) return;
+        if (!cart[id]) cart[id] = { ...item, qty: 0 };
+        cart[id].qty += 1;
+        updateCartUI();
+        showToast(`${item.name} added`);
+      }
+
+      function updateCartUI() {
+        const totalQty = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+        cartCountEl.textContent = totalQty;
+        renderCartList();
+      }
+
+      function renderCartList() {
+        cartListEl.innerHTML = "";
+        const itemsArr = Object.values(cart);
+        if (itemsArr.length === 0) {
+          cartListEl.innerHTML =
+            '<div class="small" style="padding:8px;color:#666">Your cart is empty.</div>';
+          cartTotalEl.textContent = "₹0";
+          return;
+        }
+        let total = 0;
+        itemsArr.forEach((it) => {
+          total += it.price * it.qty;
+          const row = document.createElement("div");
+          row.className = "cart-item";
+          row.innerHTML = `
+            <div style="flex:1">
+              <div><strong>${it.name}</strong></div>
+              <div class="small">₹${it.price} each</div>
+            </div>
+            <div class="qty">
+              <button class="btn secondary" data-action="dec" data-id="${
+                it.id
+              }">-</button>
+              <div style="min-width:28px;text-align:center">${it.qty}</div>
+              <button class="btn" data-action="inc" data-id="${
+                it.id
+              }">+</button>
+              <div style="width:12px"></div>
+              <div><strong>₹${it.price * it.qty}</strong></div>
+            </div>
+          `;
+          row.querySelectorAll("button[data-action]").forEach((b) => {
+            b.addEventListener("click", (e) => {
+              const action = e.currentTarget.getAttribute("data-action");
+              const id = Number(e.currentTarget.getAttribute("data-id"));
+              changeQty(id, action === "inc" ? 1 : -1);
+            });
+          });
+          cartListEl.appendChild(row);
+        });
+        cartTotalEl.textContent = "₹" + total;
+      }
+
+      function changeQty(id, delta) {
+        if (!cart[id]) return;
+        cart[id].qty += delta;
+        if (cart[id].qty <= 0) delete cart[id];
+        updateCartUI();
+      }
+
+      let toastTimer = null;
+      function showToast(text) {
+        toast.textContent = text;
+        toast.style.display = "block";
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.style.display = "none";
+        }, 1800);
+      }
+
+      document.getElementById("openCartBtn").addEventListener("click", () => {
+        backdrop.style.display = "flex";
+      });
+      document.getElementById("closeCartBtn").addEventListener("click", () => {
+        backdrop.style.display = "none";
+      });
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) backdrop.style.display = "none";
+      });
+
+      document.getElementById("checkoutBtn").addEventListener("click", () => {
+        if (Object.keys(cart).length === 0) {
+          alert("Your cart is empty");
+          return;
+        }
+        alert("Checkout successful (demo). Thank you!");
+        cart = {};
+        updateCartUI();
+        backdrop.style.display = "none";
+      });
+
+      renderMenu();
+      updateCartUI();
+    </script>
+  </body>
+</html>
